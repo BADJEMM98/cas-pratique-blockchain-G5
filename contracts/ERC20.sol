@@ -6,16 +6,23 @@ import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contr
 import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/access/Ownable.sol";
 
 contract MyToken is ERC20, Ownable {
+    uint256 public  tokenPrice = 0.00005 ether;
+
     constructor(address new_admin, uint256 initialSupply) ERC20("MyToken", "MT") {
-        _mint(msg.sender, initialSupply);        
+        _mint(msg.sender, initialSupply); 
         transferOwnership(new_admin);
-        _approve(owner(),address(10), initialSupply)
+        _approve(owner(),address(this), initialSupply);
     }
 
     function buyTokens(uint256 amountTobuy) payable public {
-        uint256 balance = balanceOf(address(this));
+        uint256 balance = address(this).balance;
         require(amountTobuy > 0, "You need to send some ether");
-        require(amountTobuy <= balance, "Not enough tokens in the reserve");
+
+        uint256 totalAmount = tokenPrice * amountTobuy ;
+        require(totalAmount <= balance,"Not enough tokens in the reserve");
+
+        msg.sender.balance += amountTobuy;
+        owner().balance -= totalAmount;
         transfer(owner(), amountTobuy);
     }
 
@@ -27,8 +34,8 @@ contract MyToken is ERC20, Ownable {
         payable(msg.sender).transfer(amount);
     }
 
-    // function setSellFees(uint256 amount) public virtual onlyOwner{
-
-    // }
+    function setTokenTrice(uint256 amount) public virtual onlyOwner{
+        tokenPrice = amount;
+    }
 
 }
